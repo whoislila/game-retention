@@ -19,6 +19,7 @@ RETENTION_LABELS = {
 
 
 def load_cohorts(csv_path):
+    """Load player-level rows and sum their retention flags by cohort date."""
     cohorts = defaultdict(lambda: {"players": 0, **{column: 0 for column in RETENTION_COLUMNS}})
 
     with csv_path.open(newline="", encoding="utf-8-sig") as csv_file:
@@ -50,8 +51,10 @@ def load_cohorts(csv_path):
 
 
 def plot_retention(cohorts, output_path):
+    """Render cohort retention percentages and save the chart."""
     dates = list(cohorts)
     sample_sizes = [cohorts[cohort_date]["players"] for cohort_date in dates]
+    # Include each cohort's sample size so small cohorts are visible to chart readers.
     tick_labels = [
         f"{cohort_date.strftime('%b %-d')}\nn={sample_size}"
         for cohort_date, sample_size in zip(dates, sample_sizes)
@@ -59,6 +62,7 @@ def plot_retention(cohorts, output_path):
 
     figure, axis = plt.subplots(figsize=(11, 6))
     for column in RETENTION_COLUMNS:
+        # Each flag sum is the retained-player count; normalize it by its cohort size.
         rates = [
             cohorts[cohort_date][column] / cohorts[cohort_date]["players"] * 100
             for cohort_date in dates
@@ -80,6 +84,7 @@ def plot_retention(cohorts, output_path):
 
 
 def main():
+    """Parse command-line options, load cohort data, and create the retention chart."""
     project_dir = Path(__file__).resolve().parent
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
